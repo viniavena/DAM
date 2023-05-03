@@ -1,6 +1,7 @@
 package dam.camarasmadrid01;
 
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
@@ -9,6 +10,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +21,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 import dam.camarasmadrid01.modelo.Camara;
 import dam.camarasmadrid01.modelo.HiloTrabajo;
@@ -35,36 +41,19 @@ public class ListadoCamarasFragment extends Fragment {
     private final String urlFichero = "http://informo.madrid.es/informo/tmadrid/CCTV.kml";
     private MutableLiveData<ArrayList<Camara>> listaCamaras;
     ListadoCamaras viewModel;
-
+    private Fragment instanciaFragmentoListado;
 
     public ListadoCamarasFragment() {
         // Required empty public constructor
     }
 
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         // Inicializar o ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ListadoCamaras.class);
-
-        //
-        SharedPreferences preferences = getActivity().getPreferences(Context.MODE_PRIVATE);
-
-
-
-        // Verificar se o ViewModel já contém a lista de câmeras
-        if (viewModel.getListaCamaras() != null) {
-            listaCamaras = viewModel.getListaCamaras();
-            //actualizaListaCamaras(listaCamaras.getValue());
-            Log.d("TAG", "oi: " + String.valueOf(listaCamaras));
-        } else {
-            // Se a lista ainda não estiver no ViewModel, criar um novo thread para processá-la
-            new Thread(new HiloTrabajo(urlFichero, this)).start();
-        }
     }
 
     @Override
@@ -77,6 +66,8 @@ public class ListadoCamarasFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        instanciaFragmentoListado = this;
+
         // Recuperar as referências para as vistas
         listView = view.findViewById(R.id.lv_camaras);
         layoutProgresso = view.findViewById(R.id.layout_progresso);
@@ -88,16 +79,43 @@ public class ListadoCamarasFragment extends Fragment {
         layoutProgresso.setVisibility(View.VISIBLE);
 
         //
-        SharedPreferences preferences = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferencesMirarFecha = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
+        long ultimaDescarga = sharedPreferencesMirarFecha.getLong("fecha_ultima_descarga", -1);
 
         // Verificar se o ViewModel já contém a lista de câmeras
         if (savedInstanceState != null) {
             listaCamaras = viewModel.getListaCamaras();
             actualizaListaCamaras(listaCamaras.getValue());
-            Log.d("TAG", "oi: " + String.valueOf(listaCamaras));
         } else {
             // Se a lista ainda não estiver no ViewModel, criar um novo thread para processá-la
-            new Thread(new HiloTrabajo(urlFichero, this)).start();
+            if (ultimaDescarga == -1) {
+                Log.d("TAG", "Fecha todavia no hay sigo guardada");
+                new Thread(new HiloTrabajo(urlFichero, ListadoCamarasFragment.this, Boolean.TRUE)).start();
+            } else {
+                Log.d("TAG", "Fecha guardada: " + String.valueOf(ultimaDescarga));
+                AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
+                builder.setTitle("¿Quieres actualizar tu lista de cámaras?");
+
+                Date dateToFormat = new Date(ultimaDescarga);
+                DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault());
+                String formattedDate = dateFormat.format(dateToFormat);
+                builder.setMessage("Última descarga en: " + formattedDate);
+
+                builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        new Thread(new HiloTrabajo(urlFichero, ListadoCamarasFragment.this, Boolean.TRUE)).start();
+                    }
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        new Thread(new HiloTrabajo(urlFichero, ListadoCamarasFragment.this, Boolean.FALSE)).start();
+                    }
+                });
+                builder.create().show();
+            }
+
         }
 
     }
@@ -146,5 +164,5 @@ public class ListadoCamarasFragment extends Fragment {
 
         viewModel.setListaCamaras(listadoCamaras);
         listaCamaras = viewModel.getListaCamaras();
-        Log.d("TAG", "Lista de cámaras guardada en ViewModel: " + listaCamaras.getValue());    }
+    }
 }
