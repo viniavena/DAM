@@ -20,7 +20,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class DetalleCamaraFragment extends Fragment{
 
     private TextView tvDetallesCamara;
-    public ImageView ivDetallesCamara, mapIcon;
+    public ImageView ivDetallesCamara, mapIcon, favoriteIcon;
     public ProgressBar progressBar;
 
 
@@ -49,6 +49,7 @@ public class DetalleCamaraFragment extends Fragment{
         progressBar= view.findViewById(R.id.pb_Imagen);
 
         mapIcon = view.findViewById(R.id.mapa_icon);
+        favoriteIcon = view.findViewById(R.id.iv_favoriteDetalle);
 
 
         progressBar.setVisibility(View.GONE);
@@ -57,6 +58,9 @@ public class DetalleCamaraFragment extends Fragment{
             String Nombre = args.getString("nombre");
             String url_String= args.getString("url");
             String coordenadas = args.getString("coordenadas");
+            Boolean isFavorite = args.getBoolean("isFavorite");
+
+            favoriteIcon.setImageResource(isFavorite ? R.drawable.baseline_favorite_24 : R.drawable.favorite_border_24);
 
             if (url_String != null) {
 
@@ -81,6 +85,7 @@ public class DetalleCamaraFragment extends Fragment{
                     }
                 });
             }
+
         }
         return view;
     }

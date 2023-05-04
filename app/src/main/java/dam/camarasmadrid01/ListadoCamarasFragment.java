@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -24,8 +23,13 @@ import android.widget.TextView;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import dam.camarasmadrid01.modelo.Camara;
 import dam.camarasmadrid01.modelo.HiloTrabajo;
@@ -41,7 +45,10 @@ public class ListadoCamarasFragment extends Fragment {
     private final String urlFichero = "http://informo.madrid.es/informo/tmadrid/CCTV.kml";
     private MutableLiveData<ArrayList<Camara>> listaCamaras;
     ListadoCamaras viewModel;
-    private Fragment instanciaFragmentoListado;
+    int posicaoCamaraSelecionada = -1;
+    public AdaptadorListadoCamara adapter;
+    ArrayList<Camara> listaCamarasFavoritas;
+
 
     public ListadoCamarasFragment() {
         // Required empty public constructor
@@ -66,8 +73,6 @@ public class ListadoCamarasFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        instanciaFragmentoListado = this;
-
         // Recuperar as referências para as vistas
         listView = view.findViewById(R.id.lv_camaras);
         layoutProgresso = view.findViewById(R.id.layout_progresso);
@@ -78,7 +83,7 @@ public class ListadoCamarasFragment extends Fragment {
         contenedorListaCamaras.setVisibility(View.GONE);
         layoutProgresso.setVisibility(View.VISIBLE);
 
-        //
+        // fecha ultima decarga
         SharedPreferences sharedPreferencesMirarFecha = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
         long ultimaDescarga = sharedPreferencesMirarFecha.getLong("fecha_ultima_descarga", -1);
 
@@ -131,8 +136,28 @@ public class ListadoCamarasFragment extends Fragment {
             contenedorListaCamaras.setVisibility(View.VISIBLE);
         }
 
+        // coge las camaras favoritas
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        Set<String> favoritas = preferences.getStringSet("favoritas", new HashSet<String>());
+        for (Camara c : listadoCamaras) {
+            if (favoritas.contains(c.getNombre())) {
+                c.setFavorita(true);
+            }
+        }
+        listaCamarasFavoritas = new ArrayList<>();
+        ArrayList<Camara> listaCamarasNaoFavoritas = new ArrayList<>();
+        for (Camara c : listadoCamaras) {
+            if (c.isFavorita()) {
+                listaCamarasFavoritas.add(c);
+            } else {
+                listaCamarasNaoFavoritas.add(c);
+            }
+        }
+
+        listaCamarasFavoritas.addAll(listaCamarasNaoFavoritas);
+
         // Mostrar las cámaras en el TextView
-        ArrayAdapter<Camara> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_single_choice, listadoCamaras);
+        adapter = new AdaptadorListadoCamara(getContext(), listaCamarasFavoritas);
         listView.setAdapter(adapter);
 
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -143,6 +168,23 @@ public class ListadoCamarasFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Obtém a câmera selecionada
                 Camara camara = (Camara) listView.getItemAtPosition(position);
+                Log.d("TAG","posicao = "+position);
+
+                //Log.d("TAG", String.valueOf(camara));
+
+                for (int i = 0; i < listaCamarasFavoritas.size(); i++) {
+                    if (i != position) {
+                        Camara outraCamara = listaCamarasFavoritas.get(i);
+                        outraCamara.setSelecionada(false);
+                    }
+                }
+                // Define a câmera selecionada como verdadeira
+                camara = listaCamarasFavoritas.get(position);
+                camara.setSelecionada(true);
+
+                // Notifica o adaptador de que os dados foram alterados
+                adapter.notifyDataSetChanged();
+
 
                 // Cria um novo fragmento e adiciona a URL da câmera como um argumento
                 DetalleCamaraFragment detalleCamaraFragment = new DetalleCamaraFragment();
@@ -150,6 +192,8 @@ public class ListadoCamarasFragment extends Fragment {
                 args.putString("url", camara.getUrl());
                 args.putString("nombre", camara.getNombre());
                 args.putString("coordenadas", camara.getCoordenadas());
+                args.putBoolean("isFavorite", camara.isFavorita());
+
                 detalleCamaraFragment.setArguments(args);
 
                 FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
@@ -162,7 +206,85 @@ public class ListadoCamarasFragment extends Fragment {
             }
         });
 
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                // Obtenha a câmera correspondente ao item clicado
+                Camara camara = (Camara) listView.getItemAtPosition(position);
+                boolean isFavorita = camara.isFavorita();
+
+                if (isFavorita) {
+                    // Remove a câmera da lista de favoritos
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    Set<String> favoritas = preferences.getStringSet("favoritas", new HashSet<String>());
+                    favoritas.remove(camara.getNombre());
+                    preferences.edit().putStringSet("favoritas", favoritas).apply();
+
+                    camara.setFavorita(false);
+                } else {
+                    // Adiciona a câmera à lista de favoritos
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    Set<String> favoritas = preferences.getStringSet("favoritas", new HashSet<String>());
+                    favoritas.add(camara.getNombre());
+                    preferences.edit().putStringSet("favoritas", favoritas).apply();
+
+                    camara.setFavorita(true);
+                }
+
+                // Ordena a lista de câmeras com as favoritas no topo
+                ArrayList<Camara> listaCamarasFavoritas = new ArrayList<>();
+                ArrayList<Camara> listaCamarasNaoFavoritas = new ArrayList<>();
+
+                for (Camara c : listadoCamaras) {
+                    if (c.isFavorita()) {
+                        listaCamarasFavoritas.add(c);
+                    } else {
+                        listaCamarasNaoFavoritas.add(c);
+                    }
+                }
+
+                listaCamarasFavoritas.addAll(listaCamarasNaoFavoritas);
+
+                atualizarPosicoes();
+
+                // Atualiza o adaptador da lista com a nova lista de câmeras ordenada
+                adapter = new AdaptadorListadoCamara(getContext(), listaCamarasFavoritas);
+                listView.setAdapter(adapter);
+
+                return true;
+            }
+        });
+
         viewModel.setListaCamaras(listadoCamaras);
         listaCamaras = viewModel.getListaCamaras();
+    }
+
+    private void atualizarPosicoes() {
+        // Criar lista auxiliar com as câmeras favoritas ordenadas
+        ArrayList<Camara> listaCamarasFavoritasOrdenadas = new ArrayList<>(listaCamarasFavoritas.size());
+        for (int i = 0; i < listaCamarasFavoritas.size(); i++) {
+            Camara camara = listaCamarasFavoritas.get(i);
+            camara.setSelecionada(false); // Resetar seleção
+            listaCamarasFavoritasOrdenadas.add(camara);
+        }
+        Collections.sort(listaCamarasFavoritasOrdenadas, new Comparator<Camara>() {
+            @Override
+            public int compare(Camara camara1, Camara camara2) {
+                boolean isFavorita1 = camara1.isFavorita();
+                boolean isFavorita2 = camara2.isFavorita();
+                if (isFavorita1 && !isFavorita2) {
+                    return -1; // camara1 é favorita, camara2 não é favorita, camara1 vem primeiro
+                } else if (!isFavorita1 && isFavorita2) {
+                    return 1; // camara1 não é favorita, camara2 é favorita, camara2 vem primeiro
+                } else {
+                    // Ambas são favoritas ou não favoritas, manter ordem original
+                    return Integer.compare(listaCamarasFavoritas.indexOf(camara1), listaCamarasFavoritas.indexOf(camara2));
+                }
+            }
+        });
+
+        // Atualizar lista principal com as câmeras favoritas ordenadas
+        listaCamarasFavoritas.clear();
+        listaCamarasFavoritas.addAll(listaCamarasFavoritasOrdenadas);
     }
 }

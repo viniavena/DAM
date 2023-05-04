@@ -121,7 +121,6 @@ public class HiloTrabajo implements Runnable {
 
     private void guardaFicheroKML(String xmlString) {
         try {
-            Log.d("TAG","String que chega: "+xmlString);
             // Obter o contexto da activity
             Context context = instanciaFragmentoListado.getActivity().getApplicationContext();
 
