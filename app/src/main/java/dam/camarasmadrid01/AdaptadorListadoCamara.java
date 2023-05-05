@@ -45,9 +45,8 @@ public class AdaptadorListadoCamara extends ArrayAdapter<Camara> {
             esFavorito.setVisibility(View.GONE);
         }
 
-        if(camara.isSelecionada()){
-            Log.d("TAG","aqui: "+camara.getNombre());
-        }
+
+        //if(camara.isSelecionada()){Log.d("TAG","nombre en el adaptador: "+camara.getNombre()+" posicion en el adaptador: "+String.valueOf(posicion));}
 
         esEligida.setImageResource(camara.isSelecionada() ? R.drawable.baseline_camera_alt_24 : R.drawable.outline_camera_alt_24);
 

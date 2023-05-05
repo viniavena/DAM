@@ -3,6 +3,7 @@ package dam.camarasmadrid01;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.nfc.Tag;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -125,8 +126,6 @@ public class ListadoCamarasFragment extends Fragment {
 
     }
     public void actualizaListaCamaras (ArrayList<Camara> listadoCamaras) {
-        Log.d("TAG", "Actualizando lista de cámaras");
-
 
         // Ocultar los elementos visibles durante el análisis y hacer visible el contenedor del listado de cámaras
         if (layoutProgresso != null) {
@@ -168,9 +167,8 @@ public class ListadoCamarasFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Obtém a câmera selecionada
                 Camara camara = (Camara) listView.getItemAtPosition(position);
-                Log.d("TAG","posicao = "+position);
-
-                //Log.d("TAG", String.valueOf(camara));
+                //Log.d("CLICK", "lista em click: "+String.valueOf(listaCamarasFavoritas));
+                //Log.d("TAG","nombre en la lista: "+camara.getNombre()+" posicion en la lista: "+String.valueOf(position));
 
                 for (int i = 0; i < listaCamarasFavoritas.size(); i++) {
                     if (i != position) {
@@ -184,7 +182,6 @@ public class ListadoCamarasFragment extends Fragment {
 
                 // Notifica o adaptador de que os dados foram alterados
                 adapter.notifyDataSetChanged();
-
 
                 // Cria um novo fragmento e adiciona a URL da câmera como um argumento
                 DetalleCamaraFragment detalleCamaraFragment = new DetalleCamaraFragment();
@@ -232,20 +229,19 @@ public class ListadoCamarasFragment extends Fragment {
                 }
 
                 // Ordena a lista de câmeras com as favoritas no topo
-                ArrayList<Camara> listaCamarasFavoritas = new ArrayList<>();
+                ArrayList<Camara> listaCamarasFavoritasTemporal = new ArrayList<>();
                 ArrayList<Camara> listaCamarasNaoFavoritas = new ArrayList<>();
 
                 for (Camara c : listadoCamaras) {
                     if (c.isFavorita()) {
-                        listaCamarasFavoritas.add(c);
+                        listaCamarasFavoritasTemporal.add(c);
                     } else {
                         listaCamarasNaoFavoritas.add(c);
                     }
                 }
 
-                listaCamarasFavoritas.addAll(listaCamarasNaoFavoritas);
-
-                atualizarPosicoes();
+                listaCamarasFavoritasTemporal.addAll(listaCamarasNaoFavoritas);
+                listaCamarasFavoritas = listaCamarasFavoritasTemporal;
 
                 // Atualiza o adaptador da lista com a nova lista de câmeras ordenada
                 adapter = new AdaptadorListadoCamara(getContext(), listaCamarasFavoritas);
@@ -257,34 +253,5 @@ public class ListadoCamarasFragment extends Fragment {
 
         viewModel.setListaCamaras(listadoCamaras);
         listaCamaras = viewModel.getListaCamaras();
-    }
-
-    private void atualizarPosicoes() {
-        // Criar lista auxiliar com as câmeras favoritas ordenadas
-        ArrayList<Camara> listaCamarasFavoritasOrdenadas = new ArrayList<>(listaCamarasFavoritas.size());
-        for (int i = 0; i < listaCamarasFavoritas.size(); i++) {
-            Camara camara = listaCamarasFavoritas.get(i);
-            camara.setSelecionada(false); // Resetar seleção
-            listaCamarasFavoritasOrdenadas.add(camara);
-        }
-        Collections.sort(listaCamarasFavoritasOrdenadas, new Comparator<Camara>() {
-            @Override
-            public int compare(Camara camara1, Camara camara2) {
-                boolean isFavorita1 = camara1.isFavorita();
-                boolean isFavorita2 = camara2.isFavorita();
-                if (isFavorita1 && !isFavorita2) {
-                    return -1; // camara1 é favorita, camara2 não é favorita, camara1 vem primeiro
-                } else if (!isFavorita1 && isFavorita2) {
-                    return 1; // camara1 não é favorita, camara2 é favorita, camara2 vem primeiro
-                } else {
-                    // Ambas são favoritas ou não favoritas, manter ordem original
-                    return Integer.compare(listaCamarasFavoritas.indexOf(camara1), listaCamarasFavoritas.indexOf(camara2));
-                }
-            }
-        });
-
-        // Atualizar lista principal com as câmeras favoritas ordenadas
-        listaCamarasFavoritas.clear();
-        listaCamarasFavoritas.addAll(listaCamarasFavoritasOrdenadas);
     }
 }
