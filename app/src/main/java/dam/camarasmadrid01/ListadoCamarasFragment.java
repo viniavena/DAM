@@ -1,9 +1,10 @@
 package dam.camarasmadrid01;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.MutableLiveData;
@@ -27,15 +28,14 @@ import dam.camarasmadrid01.modelo.ListadoCamaras;
 
 
 public class ListadoCamarasFragment extends Fragment {
-
+    public EstadoBarraHerramientas estadoBarraHerramientas;
     public TextView progresoContador;
     public LinearLayout layoutProgresso;
     private ListView listView;
     private LinearLayout contenedorListaCamaras;
-    private final String urlFichero = "http://informo.madrid.es/informo/tmadrid/CCTV.kml";
+    private final String nombreFichero = "CamarasMadrid.kml";
     private MutableLiveData<ArrayList<Camara>> listaCamaras;
     ListadoCamaras viewModel;
-
 
     public ListadoCamarasFragment() {
         // Required empty public constructor
@@ -51,11 +51,6 @@ public class ListadoCamarasFragment extends Fragment {
         // Inicializar o ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ListadoCamaras.class);
 
-        //
-        SharedPreferences preferences = getActivity().getPreferences(Context.MODE_PRIVATE);
-
-
-
         // Verificar se o ViewModel já contém a lista de câmeras
         if (viewModel.getListaCamaras() != null) {
             listaCamaras = viewModel.getListaCamaras();
@@ -63,7 +58,7 @@ public class ListadoCamarasFragment extends Fragment {
             Log.d("TAG", "oi: " + String.valueOf(listaCamaras));
         } else {
             // Se a lista ainda não estiver no ViewModel, criar um novo thread para processá-la
-            new Thread(new HiloTrabajo(urlFichero, this)).start();
+            new Thread(new HiloTrabajo(nombreFichero, this)).start();
         }
     }
 
@@ -87,9 +82,6 @@ public class ListadoCamarasFragment extends Fragment {
         contenedorListaCamaras.setVisibility(View.GONE);
         layoutProgresso.setVisibility(View.VISIBLE);
 
-        //
-        SharedPreferences preferences = getActivity().getPreferences(Context.MODE_PRIVATE);
-
         // Verificar se o ViewModel já contém a lista de câmeras
         if (savedInstanceState != null) {
             listaCamaras = viewModel.getListaCamaras();
@@ -97,7 +89,7 @@ public class ListadoCamarasFragment extends Fragment {
             Log.d("TAG", "oi: " + String.valueOf(listaCamaras));
         } else {
             // Se a lista ainda não estiver no ViewModel, criar um novo thread para processá-la
-            new Thread(new HiloTrabajo(urlFichero, this)).start();
+            new Thread(new HiloTrabajo(nombreFichero, this)).start();
         }
 
     }
@@ -132,6 +124,9 @@ public class ListadoCamarasFragment extends Fragment {
                 args.putString("url", camara.getUrl());
                 args.putString("nombre", camara.getNombre());
                 args.putString("coordenadas", camara.getCoordenadas());
+
+
+
                 detalleCamaraFragment.setArguments(args);
 
                 FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();

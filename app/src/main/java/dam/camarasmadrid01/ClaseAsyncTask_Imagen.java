@@ -13,8 +13,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ClaseAsyncTask_Imagen extends AsyncTask<String, Integer, Bitmap> {
 
@@ -22,7 +20,6 @@ public class ClaseAsyncTask_Imagen extends AsyncTask<String, Integer, Bitmap> {
     private DetalleCamaraFragment detalleCamaraFragment;
     long startTime;
     String respuesta=null;
-    String urlParsed;
 
 
     public ClaseAsyncTask_Imagen(DetalleCamaraFragment detalleCamaraFragment) {
@@ -39,20 +36,8 @@ public class ClaseAsyncTask_Imagen extends AsyncTask<String, Integer, Bitmap> {
         HttpURLConnection urlConnection = null;
 
         try {
-
-            String regex = "src=(\\S+)";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(urls[0]);
-            if (matcher.find()) {
-                urlParsed = matcher.group(1);
-                System.out.println(urlParsed);
-            } else {
-                System.out.println("No hay conseguido coger una url de la string");
-            }
-            URL url = new URL(urlParsed);
+            URL url = new URL(urls[0]);
             urlConnection = (HttpURLConnection) url.openConnection();
-
-            Log.d("TAG", "url"+urlConnection);
 
             if ( urlConnection.getResponseCode() ==HttpURLConnection.HTTP_MOVED_PERM || urlConnection.getResponseCode() ==HttpURLConnection.HTTP_SEE_OTHER
                     || urlConnection.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP){
