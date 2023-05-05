@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/op1"
+        android:icon="?attr/actionModeShareDrawable"
+        android:title="Opción 1"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/op_ubicacion"
+        android:checkable="true"
+        android:title="Mostrar ubicación" />
+
+    <group android:checkableBehavior="single" >
+        <item
+            android:id="@+id/op_una"
+            android:title="Mostrar una" />
+        <item
+            android:id="@+id/op_todas"
+            android:title="Mostrar todas" />
+        <item
+            android:id="@+id/op_agrupacion"
+            android:title="Mostrar agrupación" />
+    </group>
+</menu>
