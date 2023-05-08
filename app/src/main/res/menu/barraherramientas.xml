@@ -7,18 +7,19 @@
         android:title="Opción 1"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/op2"
+        android:id="@+id/op_ubicacion"
         android:checkable="true"
-        android:title="Opción 2" />
-    <item
-        android:id="@+id/op3"
-        android:title="Opción 3" />
+        android:title="Mostrar ubicación" />
+
     <group android:checkableBehavior="single" >
         <item
-            android:id="@+id/op4"
-            android:title="Opción 4" />
+            android:id="@+id/op_una"
+            android:title="Mostrar una" />
         <item
-            android:id="@+id/op5"
-            android:title="Opción 5" />
+            android:id="@+id/op_todas"
+            android:title="Mostrar todas" />
+        <item
+            android:id="@+id/op_agrupacion"
+            android:title="Mostrar agrupación" />
     </group>
 </menu>

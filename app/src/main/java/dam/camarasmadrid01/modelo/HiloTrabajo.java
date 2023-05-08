@@ -20,6 +20,11 @@ import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import org.xml.sax.InputSource;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -27,7 +32,9 @@ import dam.camarasmadrid01.ListadoCamarasFragment;
 
 
 public class HiloTrabajo implements Runnable {
+
     private final ListadoCamarasFragment instanciaFragmentoListado;
+
     private String urlXML;
     String xmlString;
     String xmlString2;
@@ -35,6 +42,7 @@ public class HiloTrabajo implements Runnable {
 
     public HiloTrabajo(String urlXML, ListadoCamarasFragment instanciaFragmentoListado, Boolean descargar) {
         this.urlXML = urlXML;
+
         this.instanciaFragmentoListado = instanciaFragmentoListado;
         this.descargar = descargar;
     }
@@ -58,6 +66,7 @@ public class HiloTrabajo implements Runnable {
 
     private String downloadXML(String urlXML) {
         try {
+
             // download del fichero KML
             URL url = new URL(urlXML);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -103,6 +112,7 @@ public class HiloTrabajo implements Runnable {
             factory.setNamespaceAware(true);
 
             // análise del XML
+
             SAXParser analizadorSAX = factory.newSAXParser();
             ManejadorXML manejadorXML = new ManejadorXML(instanciaFragmentoListado);
             analizadorSAX.parse(new InputSource(new StringReader(xmlString)), manejadorXML);

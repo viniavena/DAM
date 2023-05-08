@@ -1,10 +1,12 @@
 package dam.camarasmadrid01;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,13 +18,16 @@ import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import dam.camarasmadrid01.modelo.ListadoCamaras;
+
 
 public class DetalleCamaraFragment extends Fragment{
 
     private TextView tvDetallesCamara;
     public ImageView ivDetallesCamara, mapIcon, favoriteIcon;
     public ProgressBar progressBar;
-
+    public EstadoBarraHerramientas estadoBarraHerramientas;
+    public ListadoCamaras listadoCamaras;
 
     public DetalleCamaraFragment() {
         // Required empty public constructor
@@ -33,6 +38,14 @@ public class DetalleCamaraFragment extends Fragment{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+    }
+    //barra de Herramientas
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // Instanciar el objeto ViewModel. Como ya lo ha instanciado la actividad, y es una clase singleton, recibirá su referencia
+        estadoBarraHerramientas = new ViewModelProvider(getActivity()).get(EstadoBarraHerramientas.class);
+        listadoCamaras= new ViewModelProvider(getActivity()).get(ListadoCamaras.class);
     }
 
     @Override
@@ -64,7 +77,6 @@ public class DetalleCamaraFragment extends Fragment{
 
             if (url_String != null) {
 
-
                 ClaseAsyncTask_Imagen tarea_datos = new ClaseAsyncTask_Imagen(DetalleCamaraFragment.this);
                 tarea_datos.execute(url_String);
                 //preguntar esto
@@ -78,9 +90,22 @@ public class DetalleCamaraFragment extends Fragment{
                 mapIcon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        Log.d("TAG","coordenadas antes do botao: "+String.valueOf(coordenadas));
                         Intent intent = new Intent(getActivity(), MapActivity.class);
                         intent.putExtra("coordenadas", coordenadas);
                         intent.putExtra("nombre_camera", Nombre);
+
+                        //barra herramientas
+                        intent.putExtra("muestras",estadoBarraHerramientas.getMuestras());
+                        intent.putExtra("ubicacion",estadoBarraHerramientas.getUbicacion());
+
+                        //longitud y latitud actual
+                        intent.putExtra("longitud",estadoBarraHerramientas.longitud_actual);
+                        intent.putExtra("latitud",estadoBarraHerramientas.latitud_actual);
+
+                        //listado de las camaras
+
+                        intent.putExtra("listaCamaras",listadoCamaras.getListaCamaras().getValue());
                         startActivity(intent);
                     }
                 });

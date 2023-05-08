@@ -65,13 +65,13 @@ public class ManejadorXML extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         switch (localName) {
             case  "Placemark":
-                listaCamaras.add(new Camara(nombre.replaceAll("[^\\p{ASCII}]", ""), url,coordenada));
-                //SystemClock.sleep(2);
+                listaCamaras.add(new Camara(nombre, url,coordenada));
+                SystemClock.sleep(10);
                 instanciaFragmentoListado.progresoContador.setText(Integer.toString(contadorCamarasActual++));
                 break;
             case "Value":
                 if (esNombre) {
-                    nombre = contenido.toString().replaceAll("[^\\p{ASCII}]", "").trim();
+                    nombre = contenido.toString().trim();
                     esNombre = false;
                 }
                 break;
