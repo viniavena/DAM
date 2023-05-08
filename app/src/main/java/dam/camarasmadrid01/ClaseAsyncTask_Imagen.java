@@ -1,13 +1,22 @@
 package dam.camarasmadrid01;
 
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 
+import androidx.core.content.FileProvider;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -85,8 +94,14 @@ public class ClaseAsyncTask_Imagen extends AsyncTask<String, Integer, Bitmap> {
         detalleCamaraFragment.ivDetallesCamara.setImageBitmap(bitmap);
         detalleCamaraFragment.progressBar.setVisibility(View.GONE);
 
-
+        detalleCamaraFragment.ivDetallesCamara.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(detalleCamaraFragment.getContext(), ImagenPantalla.class);
+                intent.putExtra("urlString", urlParsed);
+                detalleCamaraFragment.startActivity(intent);
+                return true;
+            }
+        });
     }
-
-
 }
